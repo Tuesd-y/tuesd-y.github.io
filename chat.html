@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Old School Firebase Chatroom</title>
+  <style>
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      user-select: none;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      text-shadow: 0 0 5px #0f0;
+    }
+    #messages {
+      background: #010;
+      border: 2px solid #0f0;
+      height: 350px;
+      overflow-y: scroll;
+      padding: 10px;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+    #username, #messageInput {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      font-family: 'Courier New', monospace;
+      padding: 6px 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    #username {
+      width: 100px;
+      margin-right: 10px;
+    }
+    #messageInput {
+      width: 300px;
+      margin-right: 10px;
+    }
+    button {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 6px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    button:hover {
+      background: #0f0;
+      color: #000;
+      transition: 0.2s;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>💬 Retro Firebase Chatroom</h1>
+
+  <div id="messages"></div>
+
+  <input id="username" placeholder="Your name" maxlength="15" />
+  <input id="messageInput" placeholder="Type a message..." maxlength="200" />
+  <button id="sendBtn">Send</button>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js"></script>
+
+  <script>
+    // Your Firebase config object
+    const firebaseConfig = {
+      apiKey: "AIzaSyB2DndEZex118eq4aoj2IfLtVZhoKjIroM",
+      authDomain: "tuesd-y.firebaseapp.com",
+      databaseURL: "https://tuesd-y-default-rtdb.firebaseio.com",
+      projectId: "tuesd-y",
+      storageBucket: "tuesd-y.firebasestorage.app",
+      messagingSenderId: "662455930846",
+      appId: "1:662455930846:web:84820f7b939c7883ae974f",
+      measurementId: "G-8WTSYGGMP0"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    const db = firebase.database();
+    const messagesRef = db.ref('messages');
+
+    const messagesDiv = document.getElementById('messages');
+    const usernameInput = document.getElementById('username');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Send message function
+    function sendMessage() {
+      const user = usernameInput.value.trim() || 'anon';
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      messagesRef.push({
+        user,
+        text,
+        timestamp: Date.now()
+      });
+
+      messageInput.value = '';
+      messageInput.focus();
+    }
+
+    // Listen for new messages and display them
+    messagesRef.limitToLast(100).on('child_added', (snapshot) => {
+      const msg = snapshot.val();
+      const time = new Date(msg.timestamp).toLocaleTimeString();
+
+      const line = `[${time}] <${msg.user}> ${msg.text}`;
+      const msgEl = document.createElement('div');
+      msgEl.textContent = line;
+      messagesDiv.appendChild(msgEl);
+
+      // Auto-scroll to bottom
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    // Send message on button click
+    sendBtn.addEventListener('click', sendMessage);
+
+    // Send message on Enter key (only in message input)
+    messageInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
