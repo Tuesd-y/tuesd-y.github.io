@@ -2,83 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Old School Firebase Chatroom</title>
+  <title>Firebase Retro Chatroom</title>
   <style>
     body {
-      background: #000;
+      background: black;
       color: #0f0;
       font-family: 'Courier New', monospace;
-      padding: 20px;
       max-width: 600px;
-      margin: auto;
-      user-select: none;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      text-shadow: 0 0 5px #0f0;
+      margin: 40px auto;
+      padding: 20px;
     }
     #messages {
       background: #010;
       border: 2px solid #0f0;
-      height: 350px;
+      height: 300px;
       overflow-y: scroll;
       padding: 10px;
-      margin-bottom: 10px;
       white-space: pre-wrap;
-      font-size: 14px;
+      margin-bottom: 10px;
     }
-    #username, #messageInput {
-      background: #000;
+    input, button {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      padding: 6px 10px;
+      margin-right: 8px;
+      background: black;
       color: #0f0;
       border: 1px solid #0f0;
-      font-family: 'Courier New', monospace;
-      padding: 6px 8px;
-      font-size: 14px;
       outline: none;
     }
-    #username {
-      width: 100px;
-      margin-right: 10px;
-    }
-    #messageInput {
-      width: 300px;
-      margin-right: 10px;
-    }
     button {
-      background: #000;
-      color: #0f0;
-      border: 1px solid #0f0;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      padding: 6px 14px;
       cursor: pointer;
-      user-select: none;
     }
     button:hover {
       background: #0f0;
-      color: #000;
+      color: black;
       transition: 0.2s;
     }
   </style>
 </head>
 <body>
 
-  <h1>💬 Retro Firebase Chatroom</h1>
+  <h1>Retro Firebase Chatroom</h1>
 
   <div id="messages"></div>
 
-  <input id="username" placeholder="Your name" maxlength="15" />
-  <input id="messageInput" placeholder="Type a message..." maxlength="200" />
+  <input id="username" type="text" placeholder="Your username" maxlength="15" />
+  <input id="messageInput" type="text" placeholder="Type your message..." maxlength="300" />
   <button id="sendBtn">Send</button>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs: load these BEFORE your script -->
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js"></script>
 
   <script>
-    // Your Firebase config object
+    // Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyB2DndEZex118eq4aoj2IfLtVZhoKjIroM",
       authDomain: "tuesd-y.firebaseapp.com",
@@ -97,6 +76,7 @@
     const db = firebase.database();
     const messagesRef = db.ref('messages');
 
+    // DOM elements
     const messagesDiv = document.getElementById('messages');
     const usernameInput = document.getElementById('username');
     const messageInput = document.getElementById('messageInput');
@@ -104,22 +84,34 @@
 
     // Send message function
     function sendMessage() {
-      const user = usernameInput.value.trim() || 'anon';
+      const user = usernameInput.value.trim();
       const text = messageInput.value.trim();
-      if (!text) return;
+
+      if (!user) {
+        alert('Please enter your username!');
+        usernameInput.focus();
+        return;
+      }
+      if (!text) {
+        alert('Please enter a message!');
+        messageInput.focus();
+        return;
+      }
 
       messagesRef.push({
         user,
         text,
         timestamp: Date.now()
+      }).then(() => {
+        messageInput.value = '';
+        messageInput.focus();
+      }).catch(error => {
+        console.error('Error sending message:', error);
       });
-
-      messageInput.value = '';
-      messageInput.focus();
     }
 
-    // Listen for new messages and display them
-    messagesRef.limitToLast(100).on('child_added', (snapshot) => {
+    // Listen for new messages
+    messagesRef.limitToLast(100).on('child_added', snapshot => {
       const msg = snapshot.val();
       const time = new Date(msg.timestamp).toLocaleTimeString();
 
@@ -128,14 +120,14 @@
       msgEl.textContent = line;
       messagesDiv.appendChild(msgEl);
 
-      // Auto-scroll to bottom
+      // Auto scroll down
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
 
-    // Send message on button click
+    // Event listeners
     sendBtn.addEventListener('click', sendMessage);
 
-    // Send message on Enter key (only in message input)
+    // Send on Enter key inside message input
     messageInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') sendMessage();
     });
